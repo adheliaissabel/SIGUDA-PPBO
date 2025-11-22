@@ -14,7 +14,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // --- PERBAIKAN PATH (PENTING) ---
     // Menggunakan 'app' (kecil) dan 'config' (bukan core)
-    require_once __DIR__ . '/../app/config/database.php';
+    require_once __DIR__ . '/../app/core/database.php';
     require_once __DIR__ . '/../app/models/Admin.php';
     
     $database = new Database();
