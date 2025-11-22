@@ -10,9 +10,16 @@ if(isset($_SESSION['user_id'])) {
 
 // Proses Login saat tombol ditekan
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // PERBAIKAN DISINI: Gunakan __DIR__ . '/../' untuk naik satu folder
+    
+    // PERBAIKAN PATH:
+    // 1. __DIR__ = /app/public
+    // 2. /../    = Mundur ke /app
+    
+    // Panggil Database (Asumsi folder config ada di root /app/config)
     require_once __DIR__ . '/../config/database.php';
-    require_once __DIR__ . '/App/models/Admin.php';
+    
+    // Panggil Admin Model (Masuk ke /app/App/models)
+    require_once __DIR__ . '/../App/models/Admin.php';
     
     $database = new Database();
     $db = $database->getConnection();
@@ -28,7 +35,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
         $_SESSION['role'] = $admin->role;
         
-        // Redirect ke Dashboard (Naik satu folder dulu)
+        // Redirect ke Dashboard
         header("Location: ../views/dashboard.php");
         exit();
     } else {
