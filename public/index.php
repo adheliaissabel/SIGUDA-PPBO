@@ -1,48 +1,46 @@
 <?php
 session_start();
 
-// Jika sudah login, lempar ke dashboard.php (di folder public)
+// Jika sudah login, lempar ke dashboard.php
 if(isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit();
 }
 
+$error = null;
+
 // Proses Login
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     
-    // --- LOAD DEPENDENCIES ---
-    require_once __DIR__ . '/../App/core/database.php';
-    require_once __DIR__ . '/../App/models/Admin.php';
+    // --- PERBAIKAN PATH (PENTING) ---
+    // Menggunakan 'app' (kecil) dan 'config' (bukan core)
+    require_once __DIR__ . '/../app/config/database.php';
+    require_once __DIR__ . '/../app/models/Admin.php';
     
-    // Cek Database
-    if (!class_exists('Database')) {
-        die("Error: Class Database tidak ditemukan.");
-    }
-
     $database = new Database();
     $db = $database->getConnection();
 
-    if ($db == null) {
-        die("Koneksi Database Gagal.");
-    }
-
-    $admin = new Admin($db);
-    
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-
-    if($admin->login($username, $password)) {
-        // Set Session
-        $_SESSION['user_id'] = $admin->id;
-        $_SESSION['username'] = $admin->username;
-        $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
-        $_SESSION['role'] = $admin->role;
+    if ($db) {
+        $admin = new Admin($db);
         
-        // Redirect ke dashboard.php (Jembatan di Public)
-        header("Location: dashboard.php");
-        exit();
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+
+        if($admin->login($username, $password)) {
+            // Set Session
+            $_SESSION['user_id'] = $admin->id;
+            $_SESSION['username'] = $admin->username;
+            $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
+            $_SESSION['role'] = $admin->role;
+            
+            // Redirect ke dashboard
+            header("Location: dashboard.php");
+            exit();
+        } else {
+            $error = "Username atau Password salah!";
+        }
     } else {
-        $error = "Username atau password salah!";
+        $error = "Gagal koneksi ke database.";
     }
 }
 ?>
@@ -63,28 +61,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-items: center;
             justify-content: center;
         }
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .card-header {
-            background: transparent;
-            border-bottom: none;
-            padding-top: 30px;
-            text-align: center;
-        }
-        .login-icon {
-            font-size: 3rem;
-            color: #0d6efd;
-        }
+        .login-card { width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-icon { font-size: 3rem; color: #0d6efd; }
     </style>
 </head>
 <body>
 
     <div class="card login-card bg-white">
-        <div class="card-header">
+        <div class="card-header border-0 bg-transparent text-center pt-4">
             <i class="bi bi-box-seam-fill login-icon"></i>
             <h3 class="mt-2 fw-bold text-primary">SIGUDA</h3>
             <p class="text-muted">Sistem Gudang Fashion</p>
@@ -99,18 +83,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <form method="POST">
                 <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
+                    <label class="form-label">Username</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Masukan username" required autofocus>
+                        <input type="text" class="form-control" name="username" placeholder="Masukan username" required autofocus>
                     </div>
                 </div>
                 
                 <div class="mb-4">
-                    <label for="password" class="form-label">Password</label>
+                    <label class="form-label">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukan password" required>
+                        <input type="password" class="form-control" name="password" placeholder="Masukan password" required>
                     </div>
                 </div>
 
