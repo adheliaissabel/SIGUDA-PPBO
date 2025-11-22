@@ -12,9 +12,8 @@ class Database {
     public function getConnection() {
         $this->conn = null;
         
-        // --- LOGIKA KONEKSI RAILWAY (Sesuai Screenshot Anda) ---
-        
-        // Cek apakah ada variabel DB_HOST (Sesuai dashboard App Service Anda)
+        // --- LOGIKA KONEKSI RAILWAY ---
+        // Prioritas 1: Cek variabel DB_... (Sesuai Screenshot Dashboard Anda)
         if (getenv('DB_HOST')) {
             $this->host = getenv('DB_HOST');
             $this->db_name = getenv('DB_NAME');
@@ -22,7 +21,7 @@ class Database {
             $this->password = getenv('DB_PASSWORD');
             $this->port = getenv('DB_PORT');
         } 
-        // Cek variabel cadangan (jika pakai standar Railway lain)
+        // Prioritas 2: Cek variabel MYSQL... (Cadangan bawaan Railway)
         elseif (getenv('MYSQLHOST')) {
             $this->host = getenv('MYSQLHOST');
             $this->db_name = getenv('MYSQLDATABASE');
