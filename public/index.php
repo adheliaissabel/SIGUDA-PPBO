@@ -3,14 +3,16 @@ session_start();
 
 // Jika sudah login, langsung lempar ke Dashboard
 if(isset($_SESSION['user_id'])) {
-    header("Location: views/dashboard.php");
+    // Gunakan ../ untuk keluar dari folder public dan masuk ke views
+    header("Location: ../views/dashboard.php");
     exit();
 }
 
 // Proses Login saat tombol ditekan
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    require_once 'config/database.php';
-    require_once 'models/Admin.php';
+    // PERBAIKAN DISINI: Gunakan __DIR__ . '/../' untuk naik satu folder
+    require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/../models/Admin.php';
     
     $database = new Database();
     $db = $database->getConnection();
@@ -26,8 +28,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
         $_SESSION['role'] = $admin->role;
         
-        // Redirect ke Dashboard
-        header("Location: views/dashboard.php");
+        // Redirect ke Dashboard (Naik satu folder dulu)
+        header("Location: ../views/dashboard.php");
         exit();
     } else {
         $error = "Username atau password salah!";
