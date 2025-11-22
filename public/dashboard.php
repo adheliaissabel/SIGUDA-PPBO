@@ -1,19 +1,16 @@
 <?php
 session_start();
 
-// ... (kode cek login biarkan saja) ...
+// ... code login ...
 
-// --- PERBAIKAN PATH (Pakai 'App' besar) ---
+// Ganti 'App' menjadi 'app' (huruf kecil semua)
+require_once __DIR__ . '/../app/config/database.php';
+require_once __DIR__ . '/../app/models/Produk.php';
+require_once __DIR__ . '/../app/models/Kategori.php';
+require_once __DIR__ . '/../app/models/Transaksi.php';
 
-// Arahkan ke Config & Model
-require_once __DIR__ . '/../App/config/database.php';
-require_once __DIR__ . '/../App/models/Produk.php';
-require_once __DIR__ . '/../App/models/Kategori.php';
-require_once __DIR__ . '/../App/models/Transaksi.php';
+// ... code database ...
 
-// ... (kode inisialisasi database biarkan saja) ...
-
-// --- BARIS 13 YANG ERROR TADI ---
-// Arahkan ke View (Tampilan)
-require_once __DIR__ . '/../App/views/transaksi/dashboard.php';
+// Ganti 'App' menjadi 'app'
+require_once __DIR__ . '/app/views/transaksi/dashboard.php';
 ?>
