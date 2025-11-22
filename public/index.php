@@ -3,7 +3,6 @@ session_start();
 
 // Jika sudah login, langsung lempar ke Dashboard
 if(isset($_SESSION['user_id'])) {
-    // Gunakan ../ untuk keluar dari folder public dan masuk ke views
     header("Location: ../views/dashboard.php");
     exit();
 }
@@ -13,19 +12,20 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // --- PERBAIKAN JALUR FILE (PATH) ---
     
-    // 1. Panggil Database (Mundur dari public, masuk config)
-    // Jalur: /app/public -> /app -> /app/config/database.php
-    require_once __DIR__ . '/../config/database.php';
+    // 1. Panggil Database dari App/core
+    // __DIR__ = /app/public
+    // /../    = /app
+    // /App    = Masuk ke folder App (Huruf Besar)
+    require_once __DIR__ . '/../App/core/database.php';
     
-    // 2. Panggil Admin Model (Mundur dari public, masuk App, lalu models)
-    // Jalur: /app/public -> /app -> /app/App/models/Admin.php
+    // 2. Panggil Admin Model
     require_once __DIR__ . '/../App/models/Admin.php';
     
     // -----------------------------------
 
-    // Cek apakah class Database sudah terload dengan benar
+    // Cek apakah class Database terbaca
     if (!class_exists('Database')) {
-        die("Error: File config/database.php ditemukan, tapi Class 'Database' tidak ada di dalamnya. Cek isi filenya.");
+        die("Error: File App/core/Database.php ditemukan, tapi Class 'Database' tidak ada. Pastikan isi filenya benar.");
     }
 
     $database = new Database();
