@@ -2,7 +2,7 @@
 session_start();
 
 if(isset($_SESSION['user_id'])) {
-    header("Location: ../views/dashboard.php");
+    header("Location: ../app/views/dashboard.php");
     exit();
 }
 
