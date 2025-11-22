@@ -4,7 +4,7 @@ class Database {
     private $host = "localhost";
     private $db_name = "gudang_fashion";
     private $username = "root";
-    private $password = "mkjw4004"; // Kosongkan jika pakai XAMPP default
+    private $password = "mkjw4004"; 
 
     public $conn;
 
