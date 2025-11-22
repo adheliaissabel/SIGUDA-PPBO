@@ -4,7 +4,7 @@ class Database {
     private $host = "localhost";
     private $db_name = "gudang_fashion";
     private $username = "root";
-    private $password = ""; 
+    private $password = "mkjw4004"; 
     private $port = "3306";
 
     public $conn;
