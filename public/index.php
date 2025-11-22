@@ -1,43 +1,49 @@
 <?php
 session_start();
 
-// Cek Login
-if(!isset($_SESSION['user_id'])) {
-    header("Location: ../../public/index.php"); // Mundur 2 langkah ke public
+// Jika sudah login, lempar ke dashboard.php (di folder public)
+if(isset($_SESSION['user_id'])) {
+    header("Location: dashboard.php");
     exit();
 }
 
-// --- PERBAIKAN PATH KHUSUS FOLDER TRANSAKSI ---
-// Posisi: views/transaksi/
-// Mundur 1 (../) => views/
-// Mundur 2 (../../) => Root (/app)
-// Baru masuk ke App/core
+// Proses Login
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
+    
+    // --- LOAD DEPENDENCIES ---
+    require_once __DIR__ . '/../App/core/database.php';
+    require_once __DIR__ . '/../App/models/Admin.php';
+    
+    // Cek Database
+    if (!class_exists('Database')) {
+        die("Error: Class Database tidak ditemukan.");
+    }
 
-require_once __DIR__ . '/../../App/core/database.php';
-require_once __DIR__ . '/../../App/models/Produk.php';
-require_once __DIR__ . '/../../App/models/Kategori.php';
-require_once __DIR__ . '/../../App/models/Transaksi.php';
+    $database = new Database();
+    $db = $database->getConnection();
 
-$database = new Database();
-$db = $database->getConnection();
+    if ($db == null) {
+        die("Koneksi Database Gagal.");
+    }
 
-if ($db == null) { die("Gagal koneksi database di Dashboard Transaksi."); }
+    $admin = new Admin($db);
+    
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-$produk = new Produk($db);
-$kategori = new Kategori($db);
-$transaksi = new Transaksi($db);
-
-// Hitung Data
-$total_produk = $produk->readAll()->rowCount();
-$total_kategori = $kategori->readAll()->rowCount();
-$total_transaksi = $transaksi->readAll()->rowCount();
-
-// Hitung Nilai Stok
-$stmt_nilai = $produk->readAll();
-$total_nilai_stok = 0;
-while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
-    $harga = $row['harga_beli'] > 0 ? $row['harga_beli'] : ($row['harga_jual'] ?? 0);
-    $total_nilai_stok += ($row['stok'] * $harga);
+    if($admin->login($username, $password)) {
+        // Set Session
+        $_SESSION['user_id'] = $admin->id;
+        $_SESSION['username'] = $admin->username;
+        $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
+        $_SESSION['role'] = $admin->role;
+        
+        // Redirect ke dashboard.php (Jembatan di Public)
+        header("Location: dashboard.php");
+        exit();
+    } else {
+        $error = "Username atau password salah!";
+    }
 }
 ?>
 
@@ -46,61 +52,75 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SIGUDA PPBO</title>
+    <title>Login - SIGUDA PPBO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: none;
+            padding-top: 30px;
+            text-align: center;
+        }
+        .login-icon {
+            font-size: 3rem;
+            color: #0d6efd;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    
-    <!-- Navbar -->
-    <!-- Mundur 1 langkah ke views/layouts/navbar.php -->
-    <?php include __DIR__ . '/../layouts/navbar.php'; ?>
+<body>
 
-    <div class="container mt-4">
-        <!-- Judul -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body">
-                <h4 class="card-title">Selamat Datang, <?php echo htmlspecialchars($_SESSION['nama_lengkap']); ?>!</h4>
-                <p class="text-muted mb-0">Role: <strong><?php echo ucfirst($_SESSION['role']); ?></strong></p>
-            </div>
+    <div class="card login-card bg-white">
+        <div class="card-header">
+            <i class="bi bi-box-seam-fill login-icon"></i>
+            <h3 class="mt-2 fw-bold text-primary">SIGUDA</h3>
+            <p class="text-muted">Sistem Gudang Fashion</p>
         </div>
+        <div class="card-body p-4">
+            
+            <?php if(isset($error)): ?>
+                <div class="alert alert-danger text-center py-2" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i> <?= $error; ?>
+                </div>
+            <?php endif; ?>
 
-        <!-- Kartu Statistik -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-white bg-primary mb-3 h-100 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title">Total Produk</h6>
-                        <h2><?php echo $total_produk; ?></h2>
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Masukan username" required autofocus>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-success mb-3 h-100 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title">Total Kategori</h6>
-                        <h2><?php echo $total_kategori; ?></h2>
+                
+                <div class="mb-4">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukan password" required>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-warning mb-3 h-100 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title">Total Transaksi</h6>
-                        <h2><?php echo $total_transaksi; ?></h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3 h-100 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title">Nilai Aset</h6>
-                        <h4>Rp <?php echo number_format($total_nilai_stok, 0, ',', '.'); ?></h4>
-                    </div>
-                </div>
-            </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">MASUK SISTEM</button>
+            </form>
+        </div>
+        <div class="card-footer text-center py-3 border-0 bg-light rounded-bottom">
+            <small class="text-muted">Gunakan akun: <b>admin</b> / <b>admin123</b></small>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
