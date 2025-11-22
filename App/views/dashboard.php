@@ -3,29 +3,17 @@ session_start();
 
 // Cek apakah user sudah login
 if(!isset($_SESSION['user_id'])) {
-    // Arahkan ke public/index.php (Login)
-    header("Location: ../public/index.php");
+    header("Location: ../index.php");
     exit();
 }
 
-// --- PERBAIKAN PATH (JALUR FILE) ---
-// Kita harus masuk ke folder App (Huruf Besar)
-// __DIR__ . '/../' artinya mundur dari folder views ke root
+require_once '../config/database.php';
+require_once '../models/Produk.php';
+require_once '../models/Kategori.php';
+require_once '../models/Transaksi.php';
 
-require_once __DIR__ . '/../App/core/database.php';
-require_once __DIR__ . '/../App/models/Produk.php';
-require_once __DIR__ . '/../App/models/Kategori.php';
-require_once __DIR__ . '/../App/models/Transaksi.php';
-
-// Inisialisasi Database
 $database = new Database();
 $db = $database->getConnection();
-
-// Cek Koneksi
-if ($db == null) {
-    die("Gagal koneksi database di Dashboard.");
-}
-
 $produk = new Produk($db);
 $kategori = new Kategori($db);
 $transaksi = new Transaksi($db);
@@ -45,12 +33,11 @@ $stmt_nilai = $produk->readAll();
 $total_nilai_stok = 0;
 
 while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
-    // Gunakan harga_beli jika ada, jika tidak gunakan harga_jual (atau 0)
-    $harga_hitung = isset($row['harga_beli']) && $row['harga_beli'] > 0 ? $row['harga_beli'] : ($row['harga_jual'] ?? 0);
+    // Gunakan harga_beli jika ada, jika tidak gunakan harga
+    $harga_hitung = isset($row['harga_beli']) && $row['harga_beli'] > 0 ? $row['harga_beli'] : ($row['harga'] ?? 0);
     $total_nilai_stok += ($row['stok'] * $harga_hitung);
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -64,7 +51,7 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
     
     <?php include 'layouts/navbar.php'; ?>
 
-    <div class="container mt-4">
+    <div class="container">
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card shadow-sm border-0">
@@ -89,11 +76,10 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
                     <div class="card-footer bg-primary border-0">
-                        <a href="../public/ProdukController.php" class="text-white text-decoration-none small">Lihat Detail <i class="bi bi-arrow-right"></i></a>
+                        <a href="../controllers/ProdukController.php" class="text-white text-decoration-none small">Lihat Detail <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3">
                 <div class="card text-white bg-success mb-3 h-100 shadow-sm">
                     <div class="card-body">
@@ -106,11 +92,10 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
                     <div class="card-footer bg-success border-0">
-                        <a href="../public/KategoriController.php" class="text-white text-decoration-none small">Lihat Detail <i class="bi bi-arrow-right"></i></a>
+                        <a href="../controllers/KategoriController.php" class="text-white text-decoration-none small">Lihat Detail <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3">
                 <div class="card text-white bg-warning mb-3 h-100 shadow-sm">
                     <div class="card-body">
@@ -123,11 +108,10 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
                         </div>
                     </div>
                     <div class="card-footer bg-warning border-0">
-                        <a href="../public/TransaksiController.php" class="text-white text-decoration-none small">Lihat Detail <i class="bi bi-arrow-right"></i></a>
+                        <a href="../controllers/TransaksiController.php" class="text-white text-decoration-none small">Lihat Detail <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3">
                 <div class="card text-white bg-info mb-3 h-100 shadow-sm">
                     <div class="card-body">
@@ -164,12 +148,9 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
                                 </thead>
                                 <tbody>
                                     <?php 
-                                    // Pastikan method getLowStock ada di model Produk
-                                    // Jika error, cek apakah method ini sudah dibuat di App/models/Produk.php
-                                    if(method_exists($produk, 'getLowStock')):
-                                        $stmt_low = $produk->getLowStock(10);
-                                        if($stmt_low->rowCount() > 0):
-                                            while($row = $stmt_low->fetch(PDO::FETCH_ASSOC)): 
+                                    $stmt_low = $produk->getLowStock(10);
+                                    if($stmt_low->rowCount() > 0):
+                                        while($row = $stmt_low->fetch(PDO::FETCH_ASSOC)): 
                                     ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($row['kode_produk'] ?? '-'); ?></td>
@@ -177,13 +158,10 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
                                         <td class="text-center"><span class="badge bg-danger rounded-pill"><?php echo $row['stok']; ?></span></td>
                                     </tr>
                                     <?php 
-                                            endwhile; 
-                                        else:
+                                        endwhile; 
+                                    else:
                                     ?>
                                     <tr><td colspan="3" class="text-center text-muted py-3">Tidak ada stok menipis</td></tr>
-                                    <?php endif; 
-                                    else: ?>
-                                    <tr><td colspan="3" class="text-center text-danger">Method getLowStock() belum dibuat di Model Produk.</td></tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
