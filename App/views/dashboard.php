@@ -1,40 +1,41 @@
 <?php
-session_start();
+// Pastikan session start hanya dipanggil sekali
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Cek Login
+// Cek Login (Backup security)
 if(!isset($_SESSION['user_id'])) {
-    // Jika belum login, arahkan ke halaman login di public
-    // Path: views/transaksi -> views -> root -> public/index.php
-    header("Location: ../../public/index.php"); 
+    header("Location: ../../../public/index.php");
     exit();
 }
 
-// --- PERBAIKAN PATH (JALUR FILE) ---
-// Posisi File ini: /app/views/transaksi/
-// Target: /app/App/core/database.php
+// --- PERBAIKAN PATH ---
+// Posisi: App/views/transaksi/
+// Target: App/core/database.php
 
-require_once __DIR__ . '/../../App/core/database.php';
-require_once __DIR__ . '/../../App/models/Produk.php';
-require_once __DIR__ . '/../../App/models/Kategori.php';
-require_once __DIR__ . '/../../App/models/Transaksi.php';
+// Gunakan __DIR__ untuk path absolut yang lebih aman
+// Mundur 2 langkah: App/views/transaksi -> App/views -> App
+require_once __DIR__ . '/../../core/database.php';
+require_once __DIR__ . '/../../models/Produk.php';
+require_once __DIR__ . '/../../models/Kategori.php';
+require_once __DIR__ . '/../../models/Transaksi.php';
 
 $database = new Database();
 $db = $database->getConnection();
 
-if ($db == null) { 
-    die("Gagal koneksi database. Cek variabel Railway."); 
-}
+if ($db == null) { die("Gagal koneksi database."); }
 
 $produk = new Produk($db);
 $kategori = new Kategori($db);
 $transaksi = new Transaksi($db);
 
-// Hitung Statistik
+// ... (Sisa kode logika dashboard sama seperti sebelumnya)
+// Hitung Data
 $total_produk = $produk->readAll()->rowCount();
 $total_kategori = $kategori->readAll()->rowCount();
 $total_transaksi = $transaksi->readAll()->rowCount();
 
-// Hitung Nilai Stok
 $stmt_nilai = $produk->readAll();
 $total_nilai_stok = 0;
 while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
@@ -55,9 +56,16 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
 <body class="bg-light">
     
     <!-- Navbar -->
-    <!-- Posisi: views/transaksi/ -->
-    <!-- Target: views/layouts/navbar.php (Mundur 1 langkah) -->
-    <?php include __DIR__ . '/../layouts/navbar.php'; ?>
+    <!-- Asumsi navbar ada di App/views/layouts/navbar.php -->
+    <?php 
+    $navbar_path = __DIR__ . '/../../views/layouts/navbar.php';
+    if (file_exists($navbar_path)) {
+        include $navbar_path; 
+    } else {
+        // Fallback path
+        include __DIR__ . '/../layouts/navbar.php';
+    }
+    ?>
 
     <div class="container mt-4">
         <!-- Welcome Card -->
@@ -99,99 +107,6 @@ while($row = $stmt_nilai->fetch(PDO::FETCH_ASSOC)) {
                     <div class="card-body">
                         <h6 class="card-title">Nilai Aset</h6>
                         <h4>Rp <?php echo number_format($total_nilai_stok, 0, ',', '.'); ?></h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tabel Stok Menipis -->
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle"></i> Stok Menipis (< 10)</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Kode</th>
-                                        <th>Produk</th>
-                                        <th class="text-center">Sisa Stok</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php 
-                                    // Pastikan method getLowStock ada
-                                    if(method_exists($produk, 'getLowStock')):
-                                        $stmt_low = $produk->getLowStock(10);
-                                        if($stmt_low->rowCount() > 0):
-                                            while($row = $stmt_low->fetch(PDO::FETCH_ASSOC)): 
-                                    ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['kode_produk'] ?? '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($row['nama_produk']); ?></td>
-                                        <td class="text-center"><span class="badge bg-danger rounded-pill"><?php echo $row['stok']; ?></span></td>
-                                    </tr>
-                                    <?php 
-                                            endwhile; 
-                                        else:
-                                    ?>
-                                    <tr><td colspan="3" class="text-center text-muted py-3">Tidak ada stok menipis</td></tr>
-                                    <?php endif; endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Transaksi Terakhir -->
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 text-primary"><i class="bi bi-clock-history"></i> 5 Transaksi Terakhir</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Kode</th>
-                                        <th>Jenis</th>
-                                        <th>Tanggal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php 
-                                    $stmt_recent = $transaksi->readAll(); 
-                                    $count = 0;
-                                    if($stmt_recent->rowCount() > 0):
-                                        while($row = $stmt_recent->fetch(PDO::FETCH_ASSOC)): 
-                                            if($count >= 5) break;
-                                            $count++;
-                                    ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['kode_transaksi'] ?? $row['id_transaksi']); ?></td>
-                                        <td>
-                                            <?php if($row['jenis_transaksi'] == 'masuk'): ?>
-                                                <span class="badge bg-success"><i class="bi bi-arrow-down"></i> Masuk</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-danger"><i class="bi bi-arrow-up"></i> Keluar</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?php echo date('d/m/Y', strtotime($row['tanggal'])); ?></td>
-                                    </tr>
-                                    <?php 
-                                        endwhile; 
-                                    else:
-                                    ?>
-                                    <tr><td colspan="3" class="text-center text-muted py-3">Belum ada transaksi</td></tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
             </div>
