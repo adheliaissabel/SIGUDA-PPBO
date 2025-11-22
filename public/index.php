@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Jika sudah login, langsung ke Dashboard
 if(isset($_SESSION['user_id'])) {
     header("Location: ../views/dashboard.php");
     exit();
@@ -9,29 +8,25 @@ if(isset($_SESSION['user_id'])) {
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     
-    // --- PERBAIKAN JALUR FILE (PATH) ---
+    // --- PATH FILE (BENAR: Mundur dari public, masuk ke App) ---
     
-    // 1. Panggil Database (Mundur dari public, masuk App/core)
-    // Pastikan nama file 'database.php' huruf kecil
+    // 1. Panggil Database
     require_once __DIR__ . '/../App/core/database.php';
     
-    // 2. Panggil Admin Model (Mundur dari public, masuk App/models)
-    // Pastikan nama file 'Admin.php' huruf Besar Awal
+    // 2. Panggil Admin Model
     require_once __DIR__ . '/../App/models/Admin.php';
     
-    // ------------------------------------
+    // --------------------------------------------------
 
-    // Cek apakah class Database terbaca
     if (!class_exists('Database')) {
-        die("Error: File App/core/database.php ditemukan, tapi Class 'Database' tidak ada. Cek isi filenya.");
+        die("Error: File App/core/database.php ketemu, tapi Class Database tidak ada.");
     }
 
     $database = new Database();
     $db = $database->getConnection();
 
-    // Cek apakah koneksi berhasil (PENTING!)
     if ($db == null) {
-        die("Koneksi Database Gagal. Cek apakah database Railway sudah aktif.");
+        die("Koneksi Database Gagal. Cek Variabel di Railway (DB_HOST vs MYSQLHOST).");
     }
 
     $admin = new Admin($db);

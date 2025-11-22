@@ -12,9 +12,18 @@ class Database {
     public function getConnection() {
         $this->conn = null;
         
-        // --- LOGIKA KONEKSI RAILWAY ---
-        // Mengambil settingan otomatis dari server Railway
-        if (getenv('MYSQLHOST')) {
+        // --- LOGIKA KONEKSI RAILWAY (Sesuai Screenshot Anda) ---
+        
+        // Cek apakah ada variabel DB_HOST (Sesuai dashboard App Service Anda)
+        if (getenv('DB_HOST')) {
+            $this->host = getenv('DB_HOST');
+            $this->db_name = getenv('DB_NAME');
+            $this->username = getenv('DB_USER');
+            $this->password = getenv('DB_PASSWORD');
+            $this->port = getenv('DB_PORT');
+        } 
+        // Cek variabel cadangan (jika pakai standar Railway lain)
+        elseif (getenv('MYSQLHOST')) {
             $this->host = getenv('MYSQLHOST');
             $this->db_name = getenv('MYSQLDATABASE');
             $this->username = getenv('MYSQLUSER');
@@ -29,8 +38,7 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
         } catch(PDOException $exception) {
-            // Jika error, tampilkan pesannya
-            echo "Gagal Konek Database: " . $exception->getMessage();
+            echo "Koneksi Database Gagal: " . $exception->getMessage();
         }
         
         return $this->conn;
