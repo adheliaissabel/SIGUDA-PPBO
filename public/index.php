@@ -2,7 +2,7 @@
 session_start();
 
 if(isset($_SESSION['user_id'])) {
-    header("Location: ../App/views/dashboard.php");
+    header("Location: ../views/dashboard.php");
     exit();
 }
 
@@ -40,7 +40,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
         $_SESSION['role'] = $admin->role;
         
-        header("Location: ../App/views/dashboard.php");
+        header("Location: ../views/dashboard.php");
         exit();
     } else {
         $error = "Username atau password salah!";
