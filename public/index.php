@@ -12,7 +12,7 @@ if(isset($_SESSION['user_id'])) {
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     // PERBAIKAN DISINI: Gunakan __DIR__ . '/../' untuk naik satu folder
     require_once __DIR__ . '/../config/database.php';
-    require_once __DIR__ . '/../models/Admin.php';
+    require_once __DIR__ . '/App/models/Admin.php';
     
     $database = new Database();
     $db = $database->getConnection();
