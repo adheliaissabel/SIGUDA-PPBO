@@ -11,16 +11,23 @@ if(isset($_SESSION['user_id'])) {
 // Proses Login saat tombol ditekan
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     
-    // PERBAIKAN PATH:
-    // 1. __DIR__ = /app/public
-    // 2. /../    = Mundur ke /app
+    // --- PERBAIKAN JALUR FILE (PATH) ---
     
-    // Panggil Database (Asumsi folder config ada di root /app/config)
+    // 1. Panggil Database (Mundur dari public, masuk config)
+    // Jalur: /app/public -> /app -> /app/config/database.php
     require_once __DIR__ . '/../config/database.php';
     
-    // Panggil Admin Model (Masuk ke /app/App/models)
+    // 2. Panggil Admin Model (Mundur dari public, masuk App, lalu models)
+    // Jalur: /app/public -> /app -> /app/App/models/Admin.php
     require_once __DIR__ . '/../App/models/Admin.php';
     
+    // -----------------------------------
+
+    // Cek apakah class Database sudah terload dengan benar
+    if (!class_exists('Database')) {
+        die("Error: File config/database.php ditemukan, tapi Class 'Database' tidak ada di dalamnya. Cek isi filenya.");
+    }
+
     $database = new Database();
     $db = $database->getConnection();
     $admin = new Admin($db);
@@ -29,13 +36,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
 
     if($admin->login($username, $password)) {
-        // Set Session Variables
         $_SESSION['user_id'] = $admin->id;
         $_SESSION['username'] = $admin->username;
         $_SESSION['nama_lengkap'] = $admin->nama_lengkap;
         $_SESSION['role'] = $admin->role;
         
-        // Redirect ke Dashboard
         header("Location: ../views/dashboard.php");
         exit();
     } else {
